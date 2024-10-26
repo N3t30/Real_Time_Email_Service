@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real Time Email Service</title>
+</head>
+<body>
+    <h1>Enviar Mensagem</h1>
+    <form id="sendMessageForm">
+        <input type="text" id="recipient" placeholder="Destinatário" required>
+        <input type="text" id="title" placeholder="Título" required>
+        <textarea id="body" placeholder="Mensagem" required></textarea>
+        <button type="submit">Enviar</button>
+    </form>
+
+    <h2>Inbox</h2>
+    <div id="inbox"></div>
+
+    <script>
+        document.getElementById('sendMessageForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const recipient = document.getElementById('recipient').value;
+            const title = document.getElementById('title').value;
+            const body = document.getElementById('body').value;
+
+            const response = await fetch('/api/messaging/send/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'), // Assumindo que o token é armazenado
+                },
+                body: JSON.stringify({ recipient, title, body })
+            });
+
+            if (response.ok) {
+                alert('Mensagem enviada com sucesso!');
+                // Limpar os campos
+                document.getElementById('recipient').value = '';
+                document.getElementById('title').value = '';
+                document.getElementById('body').value = '';
+            } else {
+                alert('Erro ao enviar a mensagem.');
+            }
+        });
+    </script>
+</body>
+</html>

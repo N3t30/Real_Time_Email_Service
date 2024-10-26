@@ -2,6 +2,7 @@ from rest_framework import generics, permissions
 from .models import Message
 from .serializers import MessageSerializer
 from django.contrib.auth.models import User
+from django.shortcuts import render
 
 class SendMessageView(generics.CreateAPIView):
     queryset = Message.objects.all()
@@ -21,4 +22,7 @@ class OutboxView(generics.ListAPIView):
 
     def get_queryset(self):
         return Message.objects.filter(sender=self.request.user)
+    
+def index(request):
+    return render(request, 'messaging/index.html')
 
