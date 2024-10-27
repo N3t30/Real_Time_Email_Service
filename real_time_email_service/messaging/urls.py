@@ -9,6 +9,7 @@ from .views import (
     MarkMessageAsReadView,
     register,
     login_view,
+    painel,
 )
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
     path('register/', register, name='register'),
     path('login/', login_view, name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('painel/', painel, name='painel'),
 ]

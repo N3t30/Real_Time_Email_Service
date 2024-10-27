@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib import messages
+from .models import Message 
 
 # View para envio de mensagem
 class SendMessageView(generics.CreateAPIView):
@@ -73,3 +74,10 @@ def login_view(request):
         else:
             messages.error(request, 'Credenciais inválidas. Tente novamente.')
     return render(request, 'messaging/login.html')  
+
+def painel(request):
+    if request.user.is_authenticated:
+        mensagens_recebidas = Message.objects.filter(recipient=request.user)
+        return render(request, 'messaging/painel.html', {'mensagens_recebidas': mensagens_recebidas})
+    else:
+        return redirect('login')
