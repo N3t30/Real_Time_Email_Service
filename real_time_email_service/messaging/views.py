@@ -3,6 +3,12 @@ from .models import Message
 from .serializers import MessageSerializer
 from django.contrib.auth.models import User
 from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+from django.db import models
+from django.contrib.auth.models import User
 
 class SendMessageView(generics.CreateAPIView):
     queryset = Message.objects.all()
@@ -25,4 +31,19 @@ class OutboxView(generics.ListAPIView):
     
 def index(request):
     return render(request, 'messaging/index.html')
+
+# View para envio de mensagem
+class MarkMessageAsReadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, message_id):
+        try:
+            message = Message.objects.get(id=message_id, recipient=request.user)
+            message.is_read = True
+            message.save()
+            return Response({'status': 'Mensagem marcada como lida!'})
+        except Message.DoesNotExist:
+            return Response({'error': 'Mensagem não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+
 
