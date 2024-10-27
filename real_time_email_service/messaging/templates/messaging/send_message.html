@@ -1,0 +1,39 @@
+<form id="send-message-form" method="POST">
+    {% csrf_token %}
+    <label for="recipient">Destinatário:</label>
+    <input type="text" id="recipient" name="recipient" required>
+
+    <label for="title">Título:</label>
+    <input type="text" id="title" name="title" required>
+
+    <label for="body">Mensagem:</label>
+    <textarea id="body" name="body" required></textarea>
+
+    <button type="submit">Enviar Mensagem</button>
+</form>
+
+<script>
+document.getElementById('send-message-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const recipient = document.getElementById('recipient').value;
+    const title = document.getElementById('title').value;
+    const body = document.getElementById('body').value;
+
+    const response = await fetch("{% url 'send_message' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ recipient, title, body })
+    });
+
+    const result = await response.json();
+    if (result.status === 'success') {
+        alert('Mensagem enviada com sucesso!');
+    } else {
+        alert(result.error);
+    }
+});
+</script>

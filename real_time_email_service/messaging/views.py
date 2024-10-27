@@ -9,9 +9,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib import messages
 
-from django.db import models
-from django.contrib.auth.models import User
-
 # View para envio de mensagem
 class SendMessageView(generics.CreateAPIView):
     queryset = Message.objects.all()
@@ -33,7 +30,7 @@ class OutboxView(generics.ListAPIView):
 
     def get_queryset(self):
         return Message.objects.filter(sender=self.request.user)
-    
+
 def index(request):
     return render(request, 'messaging/index.html')
 
@@ -44,12 +41,12 @@ class MarkMessageAsReadView(APIView):
     def post(self, request, message_id):
         try:
             message = Message.objects.get(id=message_id, recipient=request.user)
-            message.is_read = True
+            message.is_read = True  # Corrigido para 'is_read'
             message.save()
             return Response({'status': 'Mensagem marcada como lida!'})
         except Message.DoesNotExist:
             return Response({'error': 'Mensagem não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
-        
+
 def register(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -57,10 +54,10 @@ def register(request):
         password_confirm = request.POST['password_confirm']
         if password == password_confirm:
             User.objects.create_user(username=username, password=password)
-            return redirect(request, 'messaging/login.html') 
+            return redirect('login')
+        else:
+            messages.error(request, 'As senhas não coincidem.')
     return render(request, 'messaging/register.html')
-
-from django.shortcuts import render
 
 def home(request):
     return render(request, 'home.html') 
@@ -72,12 +69,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('index')  # Redirecione para a página inicial ou outra página
+            return redirect('index')  
         else:
             messages.error(request, 'Credenciais inválidas. Tente novamente.')
-            return render(request, 'messaging/login.html')
-    return render(request, 'messaging/login.html')  # ou o template que você estiver usando
-
-
-
-
+    return render(request, 'messaging/login.html')  

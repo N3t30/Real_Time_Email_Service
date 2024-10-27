@@ -1,47 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Real Time Email Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Mensagens</title>
 </head>
 <body>
-    <h1>Enviar Mensagem</h1>
-    <form id="sendMessageForm">
-        <input type="text" id="recipient" placeholder="Destinatário" required>
-        <input type="text" id="title" placeholder="Título" required>
-        <textarea id="body" placeholder="Mensagem" required></textarea>
+    <style>
+        /* Centralizar o conteúdo */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+            margin: 0;
+        }
+        form {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            max-width: 200px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        </style>
+        <form method="post" action="{% url 'send_message' %}">
+        <h1>Bem-vindo, {{ user.username }}!</h1>
+        <h2>Enviar Mensagem</h2>
+        {% csrf_token %}
+        <input type="text" name="recipient" placeholder="Destinatário" required>
+        <input type="text" name="title" placeholder="Título da mensagem" required>
+        <textarea name="body" placeholder="Digite sua mensagem" required></textarea>
         <button type="submit">Enviar</button>
+
+        <h2>Mensagens Recebidas</h2>
+        <ul>
+            {% for mensagem in mensagens_recebidas %}
+                <li><strong>De:</strong> {{ mensagem.sender.username }} - <strong>Mensagem:</strong> {{ mensagem.body }}</li>
+            {% empty %}
+                <li>Nenhuma mensagem recebida.</li>
+            {% endfor %}
+        </ul>
+    
+        <a href="{% url 'logout' %}">Sair</a>
     </form>
-
-    <h2>Inbox</h2>
-    <div id="inbox"></div>
-
-    <script>
-        document.getElementById('sendMessageForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const recipient = document.getElementById('recipient').value;
-            const title = document.getElementById('title').value;
-            const body = document.getElementById('body').value;
-
-            const response = await fetch('/api/messaging/send/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('token'), // Assumindo que o token é armazenado
-                },
-                body: JSON.stringify({ recipient, title, body })
-            });
-
-            if (response.ok) {
-                alert('Mensagem enviada com sucesso!');
-                // Limpar os campos
-                document.getElementById('recipient').value = '';
-                document.getElementById('title').value = '';
-                document.getElementById('body').value = '';
-            } else {
-                alert('Erro ao enviar a mensagem.');
-            }
-        });
-    </script>
 </body>
 </html>
