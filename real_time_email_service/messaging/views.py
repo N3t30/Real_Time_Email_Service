@@ -2,19 +2,23 @@ from rest_framework import generics, permissions
 from .models import Message
 from .serializers import MessageSerializer
 from django.contrib.auth.models import User
-from django.shortcuts import render
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib import messages
 
 from django.db import models
 from django.contrib.auth.models import User
 
+# View para envio de mensagem
 class SendMessageView(generics.CreateAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+# View para visualizar a caixa de entrada (inbox)
 class InboxView(generics.ListAPIView):
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -22,6 +26,7 @@ class InboxView(generics.ListAPIView):
     def get_queryset(self):
         return Message.objects.filter(recipient=self.request.user)
 
+# View para visualizar a caixa de saída (outbox)
 class OutboxView(generics.ListAPIView):
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -32,7 +37,7 @@ class OutboxView(generics.ListAPIView):
 def index(request):
     return render(request, 'messaging/index.html')
 
-# View para envio de mensagem
+# View para marcar uma mensagem como lida
 class MarkMessageAsReadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -44,6 +49,35 @@ class MarkMessageAsReadView(APIView):
             return Response({'status': 'Mensagem marcada como lida!'})
         except Message.DoesNotExist:
             return Response({'error': 'Mensagem não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+        
+def register(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        password_confirm = request.POST['password_confirm']
+        if password == password_confirm:
+            User.objects.create_user(username=username, password=password)
+            return redirect(request, 'messaging/login.html') 
+    return render(request, 'messaging/register.html')
+
+from django.shortcuts import render
+
+def home(request):
+    return render(request, 'home.html') 
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('index')  # Redirecione para a página inicial ou outra página
+        else:
+            messages.error(request, 'Credenciais inválidas. Tente novamente.')
+            return render(request, 'messaging/login.html')
+    return render(request, 'messaging/login.html')  # ou o template que você estiver usando
+
 
 
 
