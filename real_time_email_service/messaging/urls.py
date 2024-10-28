@@ -19,7 +19,6 @@ urlpatterns = [
     path('send/', send_message, name='send_message'),
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
-    path('logout/', LogoutView.as_view(), name='logout'),
     path('painel/', painel, name='painel'),
     # path('messaging/', include('messaging.urls')),
 ]

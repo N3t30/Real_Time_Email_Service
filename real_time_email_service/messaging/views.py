@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from django.http import JsonResponse
 from django.contrib.auth.models import User
+import logging
 from django.contrib import messages
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -11,7 +12,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from messaging.models import Message
+from .models import Message
 from django.contrib import messages
 
 def home(request):
@@ -60,15 +61,21 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     async def notify_user(self, event):
         await self.send(text_data=json.dumps(event))
 
+logger = logging.getLogger(__name__)
+
 @csrf_exempt
 @login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_message(request):
     if request.method == 'POST':
+        token = request.headers.get('Authorization')
+        print("Token recebido:", token)  # Isso deve aparecer nos logs do servidor
+        logger.info("Token recebido: %s", token)
+
         try:
             data = json.loads(request.body)
-            print("Dados recebidos:", data)  # Log dos dados recebidos
+            logger.info("Dados recebidos: %s", data)  # Usando logger
 
             recipient_username = data.get('recipient')
             title = data.get('title')
@@ -102,10 +109,10 @@ def send_message(request):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Dados JSON inválidos'}, status=400)
         except Exception as e:
+            logger.error("Erro ao enviar mensagem: %s", str(e))
             return JsonResponse({'error': str(e)}, status=400)
 
     return JsonResponse({'error': 'Método inválido'}, status=400)
-
 
 @login_required
 def index(request):
