@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Mensagens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #messageForm {
+            display: flex;
+            flex-direction: column;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        #messageForm input, #messageForm textarea {
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #messageForm button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #messageForm button:hover {
+            background-color: #0056b3;
+        }
+        .message-list {
+            margin-top: 20px;
+        }
+        .message {
+            background: #e9ecef;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Painel de Mensagens</h1>
+    {% if user.is_authenticated %}
+        <form id="messageForm">
+            <h1>Bem-vindo, {{ user.username }}!</h1>
+            <h2>Enviar Mensagem</h2>
+            <input type="text" id="recipient" placeholder="Destinatário" required>
+            <input type="text" id="title" placeholder="Título" required>
+            <textarea id="body" placeholder="Digite sua mensagem..." required></textarea>
+            <button type="submit">Enviar Mensagem</button>
+        </form>
+    {% else %}
+        <p>Por favor, <a href="{% url 'login' %}">faça login</a> para enviar mensagens.</p>
+    {% endif %}
+
+    <div class="message-list" id="messageList">
+        {% for mensagem in mensagens_recebidas %}
+            <div class="message">
+                <strong>{{ mensagem.title }}</strong> de {{ mensagem.sender.username }}: {{ mensagem.body }}
+            </div>
+        {% empty %}
+            <div class="message">Nenhuma mensagem recebida.</div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // Armazenar o token ao fazer login (supondo que você tenha um código de login)
+        function storeToken(data) {
+            localStorage.setItem('token', data.access); // Armazenando o token JWT no localStorage
+        }
+
+        // Função para login (exemplo simplificado)
+        function login(username, password) {
+            fetch("/api/token/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro no login');
+                }
+                return response.json();
+            })
+            .then(data => {
+                storeToken(data); // Armazenando o token
+                // Redirecionar para o painel ou executar outra ação
+                window.location.reload(); // Recarrega a página para atualizar o estado do usuário
+            })
+            .catch(error => {
+                console.error('Erro ao fazer login:', error);
+            });
+        }
+
+        const form = document.getElementById('messageForm');
+        if (form) { // Verifica se o formulário existe
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+        
+                const recipient = document.getElementById('recipient').value;
+                const title = document.getElementById('title').value;
+                const body = document.getElementById('body').value;
+                const token = localStorage.getItem('token'); // Obtendo o token do localStorage
+
+                console.log("Tentando enviar mensagem:", { recipient, title, body }); // Log das informações a serem enviadas
+
+                fetch("/send/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Authorization": "Bearer " + token // Enviando o token JWT no cabeçalho
+                    },
+                    body: JSON.stringify({
+                        recipient: recipient,
+                        title: title,
+                        body: body
+                    })
+                })
+                .then(response => {
+                    console.log("Resposta do servidor:", response); // Log da resposta do servidor
+                    if (!response.ok) {
+                        throw new Error('Erro na resposta da rede: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Dados recebidos:", data); // Log dos dados recebidos
+                    if (data.status === 'success') {
+                        alert("Mensagem enviada com sucesso!");
+                        form.reset();  // Limpa o formulário após o envio
+                        
+                        // Adiciona a mensagem à lista de mensagens recebidas
+                        const messageList = document.getElementById('messageList');
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message';
+                        messageDiv.innerHTML = `<strong>${title}</strong>: ${body}`;
+                        messageList.appendChild(messageDiv);
+                    } else {
+                        alert(data.error || 'Erro ao enviar a mensagem.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar mensagem:', error); // Log do erro
+                    alert("Ocorreu um erro ao enviar a mensagem. Verifique o console para mais detalhes.");
+                });
+            });
+        }
+    </script>
+</body>
+</html>

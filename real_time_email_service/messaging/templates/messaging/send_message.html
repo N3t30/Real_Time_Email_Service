@@ -1,39 +1,76 @@
-<form id="send-message-form" method="POST">
-    {% csrf_token %}
-    <label for="recipient">Destinatário:</label>
-    <input type="text" id="recipient" name="recipient" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Mensagens</title>
+    {% comment %} <script src="{% static 'js/messaging.js' %}" defer></script> <!-- Descomentei o script caso necessário --> {% endcomment %}
+</head>
+<body>
 
-    <label for="title">Título:</label>
-    <input type="text" id="title" name="title" required>
+    {% if user.is_authenticated %}
+        <form id="send-message-form" method="POST">
+            {% csrf_token %}
+            <label for="recipient">Destinatário:</label>
+            <input type="text" id="recipient" name="recipient" required>
 
-    <label for="body">Mensagem:</label>
-    <textarea id="body" name="body" required></textarea>
+            <label for="title">Título:</label>
+            <input type="text" id="title" name="title" required>
 
-    <button type="submit">Enviar Mensagem</button>
-</form>
+            <label for="body">Mensagem:</label>
+            <textarea id="body" name="body" required></textarea>
 
-<script>
-document.getElementById('send-message-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const recipient = document.getElementById('recipient').value;
-    const title = document.getElementById('title').value;
-    const body = document.getElementById('body').value;
+            <button type="submit">Enviar Mensagem</button>
+        </form>
+    {% else %}
+        <p>Por favor, <a href="{% url 'login' %}">faça login</a> para enviar mensagens.</p>
+    {% endif %}
 
-    const response = await fetch("{% url 'send_message' %}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({ recipient, title, body })
+    <script>
+    document.getElementById('send-message-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const recipient = document.getElementById('recipient').value;
+        const title = document.getElementById('title').value;
+        const body = document.getElementById('body').value;
+
+        // Obter o token CSRF a partir do cookie do navegador
+        const csrftoken = getCookie('csrftoken');
+
+        const response = await fetch("{% url 'send_message' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('jwtToken')}`, // Usar o token JWT se necessário
+                'X-CSRFToken': csrftoken // Incluindo o token CSRF
+            },
+            body: JSON.stringify({ recipient, title, body })
+        });
+
+        const result = await response.json();
+        if (response.ok) { // Verifica se a resposta foi bem-sucedida
+            alert('Mensagem enviada com sucesso!');
+        } else {
+            alert(result.error || 'Erro ao enviar a mensagem.');
+        }
     });
 
-    const result = await response.json();
-    if (result.status === 'success') {
-        alert('Mensagem enviada com sucesso!');
-    } else {
-        alert(result.error);
+    // Função para obter o cookie 
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Verifica se este cookie começa com o nome desejado
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
-});
-</script>
+    </script>
+</body>
+</html>

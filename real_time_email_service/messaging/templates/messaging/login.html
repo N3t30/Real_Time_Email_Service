@@ -6,7 +6,6 @@
     <title>Login</title>
 </head>
 <body>
-
     <style>
         /* Centralizar o conteúdo */
         body {
@@ -42,6 +41,10 @@
         button:hover {
             background-color: #45a049;
         }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
     </style>
     <form method="post">
         <h1>Login</h1>
@@ -50,8 +53,12 @@
         <input type="password" name="password" placeholder="Senha" required>
         <button type="submit">Login</button>
         <p>Não tem uma conta? <a href="{% url 'register' %}">Registre-se aqui</a></p>
-    </form>
-
+        {% if messages %}
+            {% for message in messages %}
+                <p class="error">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
     
+    </form>
 </body>
 </html>

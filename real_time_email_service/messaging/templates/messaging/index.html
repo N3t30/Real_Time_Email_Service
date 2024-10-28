@@ -42,25 +42,29 @@
             background-color: #45a049;
         }
         </style>
+    {% if user.is_authenticated %}
         <form method="post" action="{% url 'send_message' %}">
-        <h1>Bem-vindo, {{ user.username }}!</h1>
-        <h2>Enviar Mensagem</h2>
-        {% csrf_token %}
-        <input type="text" name="recipient" placeholder="Destinatário" required>
-        <input type="text" name="title" placeholder="Título da mensagem" required>
-        <textarea name="body" placeholder="Digite sua mensagem" required></textarea>
-        <button type="submit">Enviar</button>
+            <h1>Bem-vindo, {{ user.username }}!</h1>
+            <h2>Enviar Mensagem</h2>
+            {% csrf_token %}
+            <input type="text" name="recipient" placeholder="Destinatário" required>
+            <input type="text" name="title" placeholder="Título da mensagem" required>
+            <textarea name="body" placeholder="Digite sua mensagem" required></textarea>
+            <button type="submit">Enviar</button>
 
-        <h2>Mensagens Recebidas</h2>
-        <ul>
-            {% for mensagem in mensagens_recebidas %}
-                <li><strong>De:</strong> {{ mensagem.sender.username }} - <strong>Mensagem:</strong> {{ mensagem.body }}</li>
-            {% empty %}
-                <li>Nenhuma mensagem recebida.</li>
-            {% endfor %}
-        </ul>
-    
-        <a href="{% url 'logout' %}">Sair</a>
-    </form>
+            <h2>Mensagens Recebidas</h2>
+            <ul>
+                {% for mensagem in mensagens_recebidas %}
+                    <li><strong>De:</strong> {{ mensagem.sender.username }} - <strong>Mensagem:</strong> {{ mensagem.body }}</li>
+                {% empty %}
+                    <li>Nenhuma mensagem recebida.</li>
+                {% endfor %}
+            </ul>
+        
+            <a href="{% url 'logout' %}">Sair</a>
+        </form>
+    {% else %}
+        <p>Por favor, <a href="{% url 'login' %}">faça login</a> para enviar mensagens.</p>
+    {% endif %}
 </body>
 </html>
